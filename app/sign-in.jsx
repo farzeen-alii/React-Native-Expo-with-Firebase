@@ -1,14 +1,13 @@
 import { View, Text, TextInput, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase.config';
 import { useRouter } from 'expo-router';
 
-const Signup = () => {
+const Signin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState(null);
-    const [emailSent, setEmailSent] = useState(false);
 
     const router = useRouter();
 
@@ -20,18 +19,19 @@ const Signup = () => {
       }
     }
 
-    const handleSignup = () => {
-        createUserWithEmailAndPassword(auth, email, password)
+    const handleLogin = () => {
+        setErrorMessage(null);
+        signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
             const user = userCredential.user;
             // alert('User registered Successfully!')
-            sendEmailVerification(user)
-            .then(() => {
-              alert('Verification email sent! Please check your inbox')
-            })
-            .catch((error) => {
-              setErrorMessage('Error sending verification email');
-            })
+            if(user.emailVerified){
+                alert('Login Successful!');
+                router.push('/welcome')
+            }
+            else{
+                setErrorMessage('Please verify your email before login')
+            }
             setEmail('');
             setPassword('');
         })
@@ -43,7 +43,7 @@ const Signup = () => {
 
   return (
     <View className="flex-1 justify-center items-center bg-gray-50 px-6">
-      <Text className="text-3xl font-bold text-gray-800 mb-4">Sign up</Text>
+      <Text className="text-3xl font-bold text-gray-800 mb-4">Sign in</Text>
       <View className="w-full mb-4">
         <TextInput
             placeholder='Email'
@@ -67,28 +67,20 @@ const Signup = () => {
             <Text className="text-red-500 mb-4 text-center">{errorMessage}</Text>
         )
       }
-     {
-      !emailSent && (
         <TouchableOpacity
-        onPress={handleSignup}
+        onPress={handleLogin}
         className="bg-blue-500 py-3 px-10 rounded-lg shadow-md w-full"
       >
-        <Text className="text-center text-white text-lg font-semibold">Sign up</Text>
+        <Text className="text-center text-white text-lg font-semibold">Sign in</Text>
       </TouchableOpacity>
-      )
-     }
-     {
-      emailSent && (
-        <Text className="text-green-500 mt-4 text-center">A verification email has been sent to your email address. Please verify your email before login!</Text>
-      )
-     }
+     
       <View className="mt-4">
-        <Text className="text-gray-600">Already have an account?{' '}
-        <Text className="text-blue-500 font-semibold" onPress={() => router.push('sign-in')}>Login</Text>
+        <Text className="text-gray-600">Don't have an account?{' '}
+        <Text className="text-blue-500 font-semibold" onPress={() => router.push('sign-up')}>Sign up</Text>
         </Text>
       </View>
     </View>
   )
 }
 
-export default Signup
+export default Signin
